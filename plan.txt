@@ -1,0 +1,69 @@
+2025-07-29 12:00,VIDDCLXPENTDB01,COMPLIANCE,51.60%,1156/19761MB (5.85%),24.12%,15.11%,accepting,0,0,15.13
+2025-07-29 12:15,VIDDCLXPENTDB01,COMPLIANCE,51.50%,1160/19761MB (5.87%),24.12%,16.33%,accepting,0,0,15.13
+
+
+
+ Schema::create('system_metrics', function (Blueprint $table) {
+            $table->timestamp('timestamp');
+            $table->text('hostname');
+            $table->text('environment');
+            $table->text('cpu_usage');
+            $table->text('memory_usage');
+            $table->text('disk_usage');
+            $table->text('network_usage');
+            $table->text('status');
+            $table->text('extra1');
+            $table->text('extra2');
+            $table->text('file_name');
+            $table->text('load_status');
+        });
+
+
+
+#!/bin/bash
+# Database connection parameters
+DB_NAME="skeleton"
+DB_USER="mis_user"
+DB_HOST="127.0.0.1"
+DB_PORT="5432"
+DB_PASSWORD="Password09"
+# Export password for psql to use
+export PGPASSWORD="$DB_PASSWORD"
+# Directory containing CSV files
+CSV_DIR="/data/csv"
+# Log file
+LOG_FILE="/home/postgres/scripts/csv_loader.log"
+# Ensure log file exists
+touch "$LOG_FILE"
+echo "Starting CSV last-row loader..." | tee -a "$LOG_FILE"
+# Loop through CSV files
+for file in "$CSV_DIR"/*.csv; do
+    filename=$(basename "$file")
+    echo "Processing last row of $filename..." | tee -a "$LOG_FILE"
+    # Get the last row
+    last_row=$(tail -n 1 "$file")
+    # Extract only the first 8 fields
+    truncated_row=$(echo "$last_row" | awk -F',' '{
+        for (i=1; i<=8; i++) {
+            if (i <= NF) {
+                printf "%s%s", $i, (i<8 ? "," : "\n")
+            } else {
+                printf "%s%s", "", (i<8 ? "," : "\n")
+            }
+        }
+    }')
+    # Enrich to 12 columns
+    enriched_row=$(echo "$truncated_row" | awk -F',' -v fname="$filename" 'BEGIN {OFS=","} {
+        print $0, "default1", "default2", fname, "loaded"
+    }')
+    # Load into PostgreSQL
+    echo "$enriched_row" | \
+    psql -U "$DB_USER" -d "$DB_NAME" -h "$DB_HOST" -p "$DB_PORT" \
+    -c "\copy system_metrics(timestamp, hostname, environment, cpu_usage, memory_usage, disk_usage, network_usage, status, extra1, extra2, file_name, load_status) FROM STDIN WITH (FORMAT csv)" >> "$LOG_FILE" 2>&1
+    if [ $? -eq 0 ]; then
+        echo "$filename last row loaded successfully." | tee -a "$LOG_FILE"
+    else
+        echo "Error loading $filename." | tee -a "$LOG_FILE"
+    fi
+done
+echo "CSV loading completed." | tee -a "$LOG_FILE"

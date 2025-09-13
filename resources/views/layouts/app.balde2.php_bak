@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+
+    <title>{{ config('app.name', 'Laravel') }}</title>
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="{{ asset('fonts/figtree.css') }}">
+    <!-- Chart.js -->
+    <script src="{{ asset('js/chart.js') }}"></script>
+    <!-- Alpine.js -->
+    <script src="{{ asset('js/alpine.js') }}"></script>
+    <!-- Styles & Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('Storage.getItem('theme') || 'light',
+                toggle() {
+                    this.mode = this.mode === 'light' ? 'dark' : this.mode === 'dark' ? 'grey' : 'light';
+                    localStorage.setItem('theme', this.mode);
+                }
+            });
+        });
+    </script>
+</head>
+<body 
+    class="font-sans antialiased transition-colors duration-300"
+    x-data="{ sidebarOpen: false }"
+    x-bind:class="{
+        'bg-white text-gray-900': $store.theme.mode === 'light',
+        'bg-gray-900 text-gray-100': $store.theme.mode === 'dark',
+        'bg-gray-300 text-gray-800': $store.theme.mode === 'grey'
+    }"
+>
+    <!-- Livewire Navigation -->
+    <livewire:layout.navigation />
+    <!-- Sidebar -->
+    <aside 
+        class="fixed top-0 left-0 h-screen w-72 bg-white dark:bg-gray-900 shadow-lg z-40 transition-transform duration-300"
+        :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }"
+        x-data="{ openMenu: null }"
+    >
+            <div class="flex items-center justify-between px-6 py-4 border-b dark:border-gray-700">
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white">🚀 Server Resource</h2>
+             
+        </div>
+
+        <nav class="px-4 py-6 space-y-4">
+            <!-- Dashboard -->
+            <div>
+                <button @click="openMenu === 1 ? openMenu = null : openMenu = 1"
+                    class="flex items-center w-full px-4 py-2 text-left text-gray-700 dark:text-white hover:text-blue-500 rounded-lg">
+                    <x-heroicon-o-chart-bar class="w-5 h-5 mr-2" />
+                    Dashboard
+                </button>
+
+                <div x-show="openMenu === 1" x-collapse x-transition class="ml-4 mt-1 space-y-1">
+                    <a href="{{ route('dashboard') }}" class="flex items-center text-xs text-white hover:text-blue-400">
+                        <x-heroicon-o-cpu-chip class="w-4 h-4 mr-1" />
+                        <span>Server Linux CPU</span>
+                    </a>
+                    <a href="{{ route('system.metrics.graph') }}" class="flex items-center text-xs text-white hover:text-blue-400">
+                        <x-heroicon-o-chart-bar class="w-4 h-4 mr-1" />
+                        <span>Server Linux Metrics</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Server Resource -->
+            <div>
+                <button @click="openMenu === 2 ? openMenu = null : openMenu = 2"
+                    class="flex items-center w-full px-4 py-2 text-left text-gray-700 dark:text-white hover:text-blue-500 rounded-lg">
+                    <x-heroicon-o-cpu-chip class="w-5 h-5 mr-2" />
+                    Server Resource
+                </button>
+                <div x-show="openMenu === 2" x-collapse x-transition class="ml-6 mt-2 space-y-2">
+                    <a href="{{ route('profile') }}" class="flex items-center text-xs text-white hover:text-blue-400">
+                        <x-heroicon-o-cpu-chip class="w-4 h-4 mr-1" />
+                        <span>Profile</span>
+                    </a>
+                    <a href="#" class="flex items-center text-xs text-white hover:text-blue-400">
+                        <x-heroicon-o-cpu-chip class="w-4 h-4 mr-1" />
+                        <span>Security</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 min-h-screen pt-6 px-6 md:ml-72">
+        <!-- Page Heading with Logo -->
+        @if (isset($header))
+            <header class="top-0 left-0 w-full bg-white shadow z-30">
+                <div class="max-w-7xl mx-auto py-3 px-4 sm:px-6 lg:px-8 flex items-center space-x-4">
+                    <!-- Logo in Header -->
+                    <img src="{{ asset('pru30.png') }}" alt="Logo" class="h-10 w-auto">
+                    
+                    <!-- Header Content -->
+                    <div>
+                        {{ $header }}
+                    </div>
+                </div>
+            </header>
+        @endif
+
+        <!-- Page Content -->
+        {{ $slot }}
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-sm text-gray-500">
+            &copy; 2025 Database Administrator Dashboard — DBA-PLA Prudential.
+        </footer>
+
+        <!-- Debugbar -->
+        @if (config('app.debug'))
+            {!! Debugbar::render() !!}
+        @endif
+    </main>
+</body>
+</html>

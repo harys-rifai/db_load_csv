@@ -1,0 +1,71 @@
+#!/bin/bash
+# Set PATH sesuai versi PostgreSQL
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/pgsql-14/bin
+# Hostname
+HN=$(hostname)
+# Timestamp
+TODAY=$(date "+%Y-%m-%d %H:%M")
+# Memory usage
+MEM=$(free -m | awk 'NR==2 {printf "%s/%sMB (%.2f%%)", $3, $2, $3*100/$2}')
+# CPU usage (lebih stabil)
+CPU=$(top -bn1 | awk -F',' '/Cpu\(s\)/ {
+    for(i=1;i<=NF;i++) {
+        if ($i ~ /id/) {
+            split($i,a," ");
+            print 100 - a[1] "%"
+        }
+    }
+}')
+# Database name dan port
+DBNAME="compliance"
+PORT=5006
+# Long query count
+LONG=$(psql -d $DBNAME -p $PORT -f /home/postgres/long-query.sql | awk 'NR==3{printf $1}')
+# Locking count
+LOCK=$(psql -d $DBNAME -p $PORT -f /home/postgres/locking.sql | awk 'NR==3{printf $1}')
+# Server status
+SER=$(pg_isready -p $PORT | awk '{print $3}')
+# Disk usage average
+AVG=$(df -h /dev/mapper/VolGroup* | awk '{sum+=$5; count++} END {if (count > 0) print sum/count}')
+AVG2=$(df -h /dev/mapper/data* | awk '{sum+=$5; count++} END {if (count > 0) print sum/count}')
+# Output to CSV
+echo "$TODAY,$HN,${DBNAME^^},$CPU,$MEM,$AVG,$AVG2,$SER,$LONG,$LOCK" >> /DBA_Monitoring/${HN}_2024.csv
+#fahmi 01/11/2023
+
+
+
+#ESUB
+
+#!/bin/bash
+# Set PATH sesuai versi PostgreSQL
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/edb/as14/bin 
+# Hostname
+HN=$(hostname)
+# Timestamp
+TODAY=$(date "+%Y-%m-%d %H:%M")
+# Memory usage
+MEM=$(free -m | awk 'NR==2 {printf "%s/%sMB (%.2f%%)", $3, $2, $3*100/$2}')
+# CPU usage (lebih stabil)
+CPU=$(top -bn1 | awk -F',' '/Cpu\(s\)/ {
+    for(i=1;i<=NF;i++) {
+        if ($i ~ /id/) {
+            split($i,a," ");
+            print 100 - a[1] "%"
+        }
+    }
+}')
+# Database name dan port
+DBNAME="esub"
+PORT=5006
+# Long query count
+LONG=$(psql -d $DBNAME -p $PORT -f /home/postgres/long-query.sql | awk 'NR==3{printf $1}')
+# Locking count
+LOCK=$(psql -d $DBNAME -p $PORT -f /home/postgres/locking.sql | awk 'NR==3{printf $1}')
+# Server status
+SER=$(pg_isready -p $PORT | awk '{print $3}')
+# Disk usage average
+AVG=$(df -h /dev/mapper/VolGroup* | awk '{sum+=$5; count++} END {if (count > 0) print sum/count}')
+AVG2=$(df -h /dev/mapper/data* | awk '{sum+=$5; count++} END {if (count > 0) print sum/count}')
+# Output to CSV
+echo "$TODAY,$HN,${DBNAME^^},$CPU,$MEM,$AVG,$AVG2,$SER,$LONG,$LOCK" >> /DBA_Monitoring/${HN}_2024.csv
+# Created by Fahmi 

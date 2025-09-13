@@ -1,0 +1,49 @@
+<div class="p-6 bg-white rounded shadow">
+    <h2 class="text-xl font-bold mb-4">Grafik Penggunaan CPU per Jam per Environment PRD</h2>
+
+    <canvas id="cpuChart" height="100"></canvas>
+
+    https://cdn.jsdelivr.net/npm/chart.js
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const chartData = @json($cpuChartData);
+
+            const ctx = document.getElementById('cpuChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: chartData.datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'CPU Usage per Hour per Environment'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Waktu (Jam)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'CPU Usage (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</div>
