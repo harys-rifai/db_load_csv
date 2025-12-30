@@ -3,3 +3,10 @@ git remote add origin git@gitlab.com:harysrifai-dev/code-pbi-dasboard.git
 git add .
 git commit -m "Initial commit"
 git push --set-upstream origin main
+
+
+git init --initial-branch=main
+git remote add origin git@gitlab.com:harysrifai-dev/dba_load_csv.git
+git add .
+git commit -m "Initial commit"
+git push --set-upstream origin main
